@@ -45,6 +45,7 @@ services:
     restart: unless-stopped
     container_name: ambientika-local
     env_file: /docker/ambientika/env
+    network_mode: host
     cap_add:
       - NET_ADMIN
 
