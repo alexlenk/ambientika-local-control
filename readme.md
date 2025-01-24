@@ -41,7 +41,7 @@ Minimal docker compose example
 ```
 services:
   ambientika:
-    image: ghcr.io/sragas/ambientika-local:latest
+    image: ghcr.io/sragas/ambientika-local-control:release
     restart: unless-stopped
     container_name: ambientika-local
     env_file: /docker/ambientika/env
