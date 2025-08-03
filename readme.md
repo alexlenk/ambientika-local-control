@@ -52,6 +52,27 @@ services:
 ```
 
 
+## Home Assistant Add-on
+
+This application is available as a Home Assistant add-on. See [Installation Guide](#home-assistant-installation) below.
+
+### Home Assistant Installation
+
+1. Add this repository to your Home Assistant add-on store
+2. Install the "Ambientika Local Control" add-on
+3. Configure MQTT settings in the add-on configuration
+4. Provision your devices (see [Device Provisioning](#device-provisioning))
+5. Start the add-on
+
+### Device Provisioning
+
+Before using this add-on, provision your devices to connect locally:
+
+1. Use a BLE app (LightBlue Explorer/nRF Connect)
+2. Connect to device `VMC_ABCDEFABCDEF`
+3. Find service `0000a002-*`, characteristic `0000c302-*`
+4. Write: `H_<HA_IP>:11000`, `S_<WIFI_SSID>`, `P_<WIFI_PASSWORD>`
+
 ## Configuration
 Default configuration is found in [.env](.env)
 Provide following configuration via env_file:

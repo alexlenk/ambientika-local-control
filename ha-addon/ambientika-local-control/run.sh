@@ -1,21 +1,49 @@
-LOCAL_SOCKET_PORT=11000
-REST_API_PORT=3000
+#!/usr/bin/with-contenv bashio
 
-CLOUD_SYNC_ENABLED=true
-REMOTE_CLOUD_SOCKET_PORT=11000
-REMOTE_CLOUD_HOST=185.214.203.87
+# Get configuration from Home Assistant
+CONFIG_PATH=/data/options.json
 
-ZONE_COUNT=3
+# Read configuration values
+MQTT_HOST=$(bashio::config 'mqtt_host')
+MQTT_PORT=$(bashio::config 'mqtt_port')
+MQTT_USERNAME=$(bashio::config 'mqtt_username')
+MQTT_PASSWORD=$(bashio::config 'mqtt_password')
+ZONE_COUNT=$(bashio::config 'zone_count')
+CLOUD_SYNC_ENABLED=$(bashio::config 'cloud_sync_enabled')
+CLOUD_HOST=$(bashio::config 'cloud_host')
+CLOUD_PORT=$(bashio::config 'cloud_port')
+DEVICE_STALE_TIMEOUT=$(bashio::config 'device_stale_timeout')
+REST_API_PORT=$(bashio::config 'rest_api_port')
+LOCAL_SOCKET_PORT=$(bashio::config 'local_socket_port')
+UDP_BROADCAST_START_PORT=$(bashio::config 'udp_broadcast_start_port')
 
-UDP_BROADCAST_LISTENER_START_PORT=45000
+# Build MQTT connection string
+if [[ -n "$MQTT_USERNAME" && -n "$MQTT_PASSWORD" ]]; then
+    MQTT_CONNECTION_STRING="mqtt://${MQTT_USERNAME}:${MQTT_PASSWORD}@${MQTT_HOST}:${MQTT_PORT}"
+else
+    MQTT_CONNECTION_STRING="mqtt://${MQTT_HOST}:${MQTT_PORT}"
+fi
 
-DEVICE_DB=./devices.db
-DEVICE_STALE_TIMEOUT=90
+# Create .env file with configuration
+cat > /app/.env << EOF
+LOCAL_SOCKET_PORT=${LOCAL_SOCKET_PORT}
+REST_API_PORT=${REST_API_PORT}
+
+CLOUD_SYNC_ENABLED=${CLOUD_SYNC_ENABLED}
+REMOTE_CLOUD_SOCKET_PORT=${CLOUD_PORT}
+REMOTE_CLOUD_HOST=${CLOUD_HOST}
+
+ZONE_COUNT=${ZONE_COUNT}
+
+UDP_BROADCAST_LISTENER_START_PORT=${UDP_BROADCAST_START_PORT}
+
+DEVICE_DB=/data/devices.db
+DEVICE_STALE_TIMEOUT=${DEVICE_STALE_TIMEOUT}
 SCHEDULER_CRON="*/1 * * * *"
 
-MQTT_CONNECTION_STRING=
-MQTT_USERNAME=
-MQTT_PASSWORD=
+MQTT_CONNECTION_STRING=${MQTT_CONNECTION_STRING}
+MQTT_USERNAME=${MQTT_USERNAME}
+MQTT_PASSWORD=${MQTT_PASSWORD}
 MQTT_CLIENT_ID=ambientika
 
 HOME_ASSISTANT_AUTO_DISCOVERY=true
@@ -54,3 +82,15 @@ NIGHT_ALARM_TOPIC=ambientika/%serialNumber/night_alarm
 LIGHT_SENSITIVITY_TOPIC=ambientika/%serialNumber/light_sensitivity
 LIGHT_SENSITIVITY_COMMAND_TOPIC=ambientika/%serialNumber/light_sensitivity/set
 WEATHER_UPDATE_TOPIC=ambientika/weather
+EOF
+
+# Log configuration
+bashio::log.info "Starting Ambientika Local Control..."
+bashio::log.info "MQTT Host: ${MQTT_HOST}:${MQTT_PORT}"
+bashio::log.info "Zone Count: ${ZONE_COUNT}"
+bashio::log.info "Cloud Sync: ${CLOUD_SYNC_ENABLED}"
+bashio::log.info "Database: /data/devices.db"
+
+# Start the application
+cd /app
+exec node dist/index.js
