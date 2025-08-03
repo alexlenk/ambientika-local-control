@@ -14,27 +14,19 @@ COPY . .
 
 RUN npm run build
 
-#Production stage
-ARG BUILD_ARCH
-FROM ghcr.io/home-assistant/${BUILD_ARCH}-base:3.20
+#Production stage - Use Node.js Alpine for GitHub Actions
+FROM node:22-alpine AS production
 
 WORKDIR /app
 
-# Install runtime dependencies
-RUN apk add --no-cache \
-    nodejs \
-    npm \
-    python3 \
-    py3-setuptools \
-    make \
-    g++
+# Install runtime dependencies for native modules like sqlite3
+RUN apk add --no-cache python3 py3-setuptools make g++
 
 COPY package*.json .
 
 RUN npm ci --only=production
 
 COPY --from=build /app/dist ./dist
-COPY run.sh /
-RUN chmod a+x /run.sh
+COPY .env ./
 
-CMD ["/run.sh"]
+CMD ["node", "dist/index.js"]
